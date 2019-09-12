@@ -19,6 +19,7 @@ import org.bukkit.World;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,6 +42,17 @@ public class CustomWorldServer extends WorldServer {
                 dimensionManager, MinecraftServer.getServer().getMethodProfiler(), MinecraftServer.getServer().worldLoadListenerFactory.create(11), World.Environment.NORMAL, null);
 
         this.slimeWorld = world;
+
+        // TODO replace reflection with something better
+        CustomChunkProvider newProvider = new CustomChunkProvider(this, getChunkProvider().chunkGenerator, MinecraftServer.getServer().worldLoadListenerFactory.create(11));
+        try {
+            Class<?> clazz = this.getClass().getSuperclass().getSuperclass();
+            Field f = clazz.getDeclaredField("chunkProvider");
+            f.setAccessible(true);
+            f.set(this, newProvider);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
         SlimeWorld.SlimeProperties properties = world.getProperties();
 
